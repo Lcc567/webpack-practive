@@ -1,4 +1,4 @@
-export default function printMe() {
+export default function printMe(text) {
     // console.log('print');
-    console.error('update print.js3');
+    console.log('Button Clicked: Here\'s "some text"!', text);
 }
