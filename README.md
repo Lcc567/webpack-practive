@@ -117,7 +117,7 @@ production 下 id 为索引，development 下，id 和 name 一样
   }
 ```
 
-## 分离资源时，连续打包出现 Error: EPERM: operation not permitted, lstat 'D:\lee\webpack-practive\dist\css\main.css'
+## 分离资源时，连续打包出现 Error: EPERM: operation not permitted, lstat 'D:\lee\webpack-practive\dist\css\main.css'(个例)
 
 - 解决方法 在CleanWebpackPlugin中传入参数
 不太准确，配置这个参数后，不会将文件全部清除干净

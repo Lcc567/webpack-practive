@@ -1,17 +1,11 @@
-const webpackDevServer = require('webpack-dev-server')
-const webpack = require('webpack')
-const config = require('./webpack.config.js')
 
-const options = {
-    contentBase: './dist',
-    hot: true,
-    host: 'localhost'
-}
+const express = require('express');
 
-webpackDevServer.addDevServerEntrypoints(config, options);
-const compiler = webpack(config);
-const server = new webpackDevServer(compiler, options)
+const app = express()
 
-server.listen(5000, 'localhost', function() {
-    console.log('dev-server start');
+app.get('/user', function (req, res) {
+    console.log('-0', req, res);
+    res.json({ user: 'lee' })
 })
+
+app.listen(3000)

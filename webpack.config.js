@@ -10,8 +10,8 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 console.log('process123', __dirname);
 module.exports = {
     entry: './src/index.js',
-    mode: 'production',
-    // mode: 'development',
+    // mode: 'production',
+    mode: 'development',
     // devtool: 'source-map',
     output: {
         path: path.join(__dirname, "dist"),
@@ -21,13 +21,56 @@ module.exports = {
         // sourceMapFilename: "[filebase].map",
         // publicPath: '/'
     },
+    devServer: {
+        before(app) {
+            app.get('/api/user', function (req, res) {
+                res.json({ user: 'lee' })
+            })
+        }
+        // proxy: {
+        //     '/api': {
+        //         target: 'http://localhost:3000',
+        //         pathRewrite: { '^/api': '' }
+        //     }
+        // }
+    },
+    resolve: {
+        alias: {
+            print: path.resolve(__dirname, 'src/print.js')
+        }
+    },
     module: {
         rules: [
             {
                 test: /\.html$/,
                 use: 'html-withimg-loader'
             },
-
+            // {
+            //     test: /\.js$/,
+            //     use: {
+            //         loader: 'eslint-loader',
+            //         options: {
+            //             enforce: 'pre'
+            //         }
+            //     }
+            // },
+            {
+                test: /\.js$/,
+                use: {
+                    loader: "babel-loader",
+                    // options: {
+                    //     // 预设，箭头函数之类
+                    //     presets: ['@babel/preset-env'],
+                    //     plugins: [
+                    //         // 装饰器
+                    //         ["@babel/plugin-proposal-decorators", { legacy: true }],
+                    //         // class属性
+                    //         ["@babel/plugin-proposal-class-properties", { "loose": true }]
+                    //     ]
+                    // }
+                },
+                exclude: /node_modules/
+            },
             {
                 test: /\.(png|jpg|gif)/,
                 use: {
@@ -35,7 +78,7 @@ module.exports = {
                     options: {
                         limit: 1,
                         esModule: false,
-                        outputPath: 'assets/'
+                        // outputPath: 'assets/'
                     }
                 }
             },
@@ -92,8 +135,8 @@ module.exports = {
             // cleanStaleWebpackAssets: true,
         }),
         new MiniCssExtractPlugin({
-            filename: 'css/[name].css',
-            chunkFilename: 'css/[id].css',
+            filename: '[name].css',
+            chunkFilename: '[id].css',
         }),
         // 每一个HtmlWebpackPlugin对应一个html页面
         new HtmlWebpackPlugin({
@@ -114,24 +157,24 @@ module.exports = {
         new webpack.HashedModuleIdsPlugin()
     ],
     optimization: {
-        // minimizer: [
-        //     /*  new UglifyJsPlugin({
-        //          cache: true,//启动缓存
-        //          parallel: true,//启动并行压缩
-        //          //如果为true的话，可以获得sourcemap
-        //          sourceMap: true // set to true if you want JS source maps
-        //      }), */
-        //     new TerserPlugin({
-        //         parallel: true,
-        //         cache: true
-        //     }),
-        //     //压缩css资源的
-        //     new OptimizeCSSAssetsPlugin({
-        //         assetNameRegExp: /\.css$/g,
-        //         //cssnano是PostCSS的CSS优化和分解插件。cssnano采用格式很好的CSS，并通过许多优化，以确保最终的生产环境尽可能小。
-        //         cssProcessor: require('cssnano')
-        //     })
-        // ],
+        minimizer: [
+            //     /*  new UglifyJsPlugin({
+            //          cache: true,//启动缓存
+            //          parallel: true,//启动并行压缩
+            //          //如果为true的话，可以获得sourcemap
+            //          sourceMap: true // set to true if you want JS source maps
+            //      }), */
+            //     new TerserPlugin({
+            //         parallel: true,
+            //         cache: true
+            //     }),
+            //压缩css资源的
+            new OptimizeCSSAssetsPlugin({
+                assetNameRegExp: /\.css$/g,
+                //cssnano是PostCSS的CSS优化和分解插件。cssnano采用格式很好的CSS，并通过许多优化，以确保最终的生产环境尽可能小。
+                cssProcessor: require('cssnano')
+            })
+        ],
         splitChunks: {
             cacheGroups: {
                 commons: {
