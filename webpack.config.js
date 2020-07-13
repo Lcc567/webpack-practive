@@ -1,7 +1,9 @@
 const path = require('path')
 const webpack = require('webpack');
+var HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const AutoDllPlugin = require('autodll-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -9,7 +11,9 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 
 console.log('process123', __dirname);
 module.exports = {
-    entry: './src/index.js',
+    entry: {
+        index: './src/index.js',
+    },
     // mode: 'production',
     mode: 'development',
     // devtool: 'source-map',
@@ -21,25 +25,26 @@ module.exports = {
         // sourceMapFilename: "[filebase].map",
         // publicPath: '/'
     },
-    devServer: {
-        before(app) {
-            app.get('/api/user', function (req, res) {
-                res.json({ user: 'lee' })
-            })
-        }
-        // proxy: {
-        //     '/api': {
-        //         target: 'http://localhost:3000',
-        //         pathRewrite: { '^/api': '' }
-        //     }
-        // }
-    },
+    // devServer: {
+    //     // before(app) {
+    //     //     app.get('/api/user', function (req, res) {
+    //     //         res.json({ user: 'lee' })
+    //     //     })
+    //     // }
+    //     // proxy: {
+    //     //     '/api': {
+    //     //         target: 'http://localhost:3000',
+    //     //         pathRewrite: { '^/api': '' }
+    //     //     }
+    //     // }
+    // },
     resolve: {
         alias: {
             print: path.resolve(__dirname, 'src/print.js')
         }
     },
     module: {
+        noParse: /lodash/,
         rules: [
             {
                 test: /\.html$/,
@@ -131,30 +136,61 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin({
+            // '**/*' 删除所有文件，后面可以对删除的文件进行排除
+            // cleanOnceBeforeBuildPatterns: ['**/*', '!_dll_react.js', '!react-manifest.json', '!_dll_lodash.js', '!lodash-manifest.json']
             // dry: true,
             // cleanStaleWebpackAssets: true,
         }),
+       
         new MiniCssExtractPlugin({
             filename: '[name].css',
             chunkFilename: '[id].css',
         }),
+        // new webpack.DllReferencePlugin({
+        //     manifest: path.resolve(__dirname, 'dist', 'react-manifest.json')
+        // }),
+        // // 多个动态文件链接
+        // new webpack.DllReferencePlugin({
+        //     manifest: path.resolve(__dirname, 'dist', 'lodash-manifest.json')
+        // }),
         // 每一个HtmlWebpackPlugin对应一个html页面
         new HtmlWebpackPlugin({
             title: 'caching',
             filename: 'index.html',
-            template: './src/index.html'
+            inject: true,
+            template: './src/index.html',
+            // minify: {
+            //     removeComments: true,
+            //     // collapseWhitespace: true,
+            //     // removeAttributeQuotes: true
+            // }
             // 在这里可以指定html引入的chunk，否则，会引入所有的 chunk
             // chunks: ['index'],
         }),
+        new AutoDllPlugin({
+            inject: true,
+            filename: '_dll_[name].js',
+            context: path.resolve(__dirname, 'dist'),
+            entry: {
+                react: ['react', 'react-dom']
+            }
+        }),
+        // 给HtmlWebpackPlugin生成的html注入资源
+        // append   false时，将资源插入index.js前面
+        // new HtmlWebpackTagsPlugin({ tags: ['./_dll_react.js'], append: false }),
         // new HtmlWebpackPlugin({
         //     title: 'title',
         //     filename: 'another.html',
         //     chunks: ['another'],
         // }),
-        new ManifestPlugin(),
+        // new ManifestPlugin(),
         // 在没有新的依赖引入是，可以避免本地改动后，vendor都重新打包，生成新的hash，
         // 可以做缓存
-        new webpack.HashedModuleIdsPlugin()
+        new webpack.HashedModuleIdsPlugin(),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /^\.\/locale$/,
+            contextRegExp: /moment$/
+        })
     ],
     optimization: {
         minimizer: [
@@ -175,14 +211,14 @@ module.exports = {
                 cssProcessor: require('cssnano')
             })
         ],
-        splitChunks: {
-            cacheGroups: {
-                commons: {
-                    test: /[\\/]node_modules[\\/]/,
-                    name: "vendors",
-                    chunks: "all"
-                }
-            }
-        },
+        // splitChunks: {
+        //     cacheGroups: {
+        //         commons: {
+        //             test: /[\\/]node_modules[\\/]/,
+        //             name: "vendors",
+        //             chunks: "all"
+        //         }
+        //     }
+        // },
     }
 }
